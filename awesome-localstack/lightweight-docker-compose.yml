@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  backend:
+    image: slawekradzyminski/backend:1.2
+    restart: always
+    ports:
+      - "4001:4001"
+    hostname: backend
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+  frontend:
+    image: slawekradzyminski/frontend:1.2
+    restart: always
+    ports:
+      - "8081:8081"
+
+  prometheus:
+    image: prom/prometheus
+    restart: always
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana
+    environment:
+      GF_INSTALL_PLUGINS: "grafana-clock-panel,grafana-simple-json-datasource"
+      GF_SECURITY_ADMIN_PASSWORD: grafana
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    restart: always
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
